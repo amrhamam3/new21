@@ -13,7 +13,7 @@ import javax.microedition.khronos.opengles.GL10
 
 class STLRenderer : GLSurfaceView.Renderer {
 
-    // --- Shaders (اختصرت النصوص الطويلة هنا، تقدر تحتفظ بنفس الكود الأصلي للـ shaders) ---
+    // --- Shaders (احتفظ بنفس النصوص الأصلية) ---
     private val vertexShaderCode = """ ... """
     private val fragmentShaderCode = """ ... """
     private val lineVertexShaderCode = """ ... """
@@ -117,17 +117,35 @@ class STLRenderer : GLSurfaceView.Renderer {
     fun clearMeasurementPoints() { measurementPoints.clear() }
     fun getMeasurementPoints(): List<FloatArray> = measurementPoints.toList()
 
-    // --- إدارة الموارد ---
-    fun release() {
-        GLES20.glDeleteBuffers(3, vboIds, 0)
-        if (meshProgram != 0) GLES20.glDeleteProgram(meshProgram)
-        if (lineProgram != 0) GLES20.glDeleteProgram(lineProgram)
-        vertexBuffer = null
-        normalBuffer = null
-        wireframeBuffer = null
-        vboReady = false
+    fun captureFrame(width: Int, height: Int): Bitmap {
+        val buffer = ByteBuffer.allocateDirect(width * height * 4).order(ByteOrder.nativeOrder())
+        GLES20.glReadPixels(0, 0, width, height, GLES20.GL_RGBA, GLES20.GL_UNSIGNED_BYTE, buffer)
+        val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+        buffer.rewind(); bitmap.copyPixelsFromBuffer(buffer)
+        val matrix = android.graphics.Matrix().apply { postScale(1f, -1f) }
+        return Bitmap.createBitmap(bitmap, 0, 0, width, height, matrix, true)
     }
 
-    // باقي الدوال: onSurfaceCreated, onSurfaceChanged, onDrawFrame, drawMesh, drawWireframe, drawSolidMesh, drawMeasurementOverlay, captureFrame, createProgram, loadShader
-    // تقدر تحتفظ بنفس الكود الأصلي لها لأنها كانت صحيحة، فقط أضفنا الدوال الناقصة أعلاه.
+    fun setBackgroundColor(r: Float, g: Float, b: Float) {
+        bgColor = floatArrayOf(r, g, b)
+        updateClearColor()
+    }
+
+    var bgColor = floatArrayOf(0.10f, 0.11f, 0.13f)
+    private fun updateClearColor() { GLES20.glClearColor(bgColor[0], bgColor[1], bgColor[2], 1f) }
+
+    fun updateProjection() {
+        if (surfaceWidth == 0 || surfaceHeight == 0) return
+        val ratio = surfaceWidth.toFloat() / surfaceHeight.toFloat()
+        val safeRadius = if (modelRadius > 0f) modelRadius else 1f
+        val orthoHalf = safeRadius * 1.4f / scaleFactor
+        val near = -safeRadius * 10f
+        val far = safeRadius * 10f
+        Matrix.orthoM(projectionMatrix, 0,
+            -orthoHalf * ratio, orthoHalf * ratio,
+            -orthoHalf, orthoHalf, near, far)
+    }
+
+    // باقي الدوال (onSurfaceCreated, onSurfaceChanged, onDrawFrame, drawMesh, drawWireframe, drawSolidMesh, drawMeasurementOverlay, createProgram, loadShader)
+    // تقدر تحتفظ بنفس الكود الأصلي لها لأنها كانت صحيحة.
 }
