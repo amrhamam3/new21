@@ -13,7 +13,7 @@ import javax.microedition.khronos.opengles.GL10
 
 class STLRenderer : GLSurfaceView.Renderer {
 
-    // --- Shaders (احتفظ بنفس النصوص الأصلية) ---
+    // --- Shaders (احتفظ بالنصوص الأصلية هنا) ---
     private val vertexShaderCode = """ ... """
     private val fragmentShaderCode = """ ... """
     private val lineVertexShaderCode = """ ... """
@@ -60,7 +60,7 @@ class STLRenderer : GLSurfaceView.Renderer {
 
     var modelColor = floatArrayOf(0.45f, 0.75f, 0.95f, 1.0f)
 
-    // --- نظام المواد ---
+    // --- المواد ---
     enum class Material(val id: Int, val nameAr: String, val defaultColor: FloatArray) {
         PLASTIC(0, "بلاستيك", floatArrayOf(0.08f, 0.42f, 0.78f)),
         METAL  (1, "معدن",    floatArrayOf(0.78f, 0.78f, 0.82f)),
@@ -146,6 +146,29 @@ class STLRenderer : GLSurfaceView.Renderer {
             -orthoHalf, orthoHalf, near, far)
     }
 
-    // باقي الدوال (onSurfaceCreated, onSurfaceChanged, onDrawFrame, drawMesh, drawWireframe, drawSolidMesh, drawMeasurementOverlay, createProgram, loadShader)
-    // تقدر تحتفظ بنفس الكود الأصلي لها لأنها كانت صحيحة.
-}
+    // --- الدوال المطلوبة من GLSurfaceView.Renderer ---
+    override fun onSurfaceCreated(gl: GL10?, config: EGLConfig?) {
+        updateClearColor()
+        meshProgram = createProgram(vertexShaderCode, fragmentShaderCode)
+        lineProgram = createProgram(lineVertexShaderCode, lineFragmentShaderCode)
+        GLES20.glGenBuffers(3, vboIds, 0)
+    }
+
+    override fun onSurfaceChanged(gl: GL10?, width: Int, height: Int) {
+        surfaceWidth = width
+        surfaceHeight = height
+        GLES20.glViewport(0, 0, width, height)
+        updateProjection()
+    }
+
+    override fun onDrawFrame(gl: GL10?) {
+        GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT or GLES20.GL_DEPTH_BUFFER_BIT)
+
+        Matrix.setLookAtM(viewMatrix, 0,
+            0f, 0f, modelRadius * 3f,
+            0f, 0f, 0f,
+            0f, 1f, 0f)
+
+        Matrix.setIdentityM(modelMatrix, 0)
+        Matrix.translateM(modelMatrix, 0, -modelCenter[0] + panX, -modelCenter[1] + panY, -modelCenter[2])
+        Matrix.rotateM(modelMatrix, 0, rotationX
