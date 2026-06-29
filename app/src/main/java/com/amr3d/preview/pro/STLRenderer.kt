@@ -13,7 +13,7 @@ import javax.microedition.khronos.opengles.GL10
 
 class STLRenderer : GLSurfaceView.Renderer {
 
-    // --- Shaders (احتفظ بالنصوص الأصلية هنا) ---
+    // --- Shaders ---
     private val vertexShaderCode = """ ... """
     private val fragmentShaderCode = """ ... """
     private val lineVertexShaderCode = """ ... """
@@ -48,7 +48,6 @@ class STLRenderer : GLSurfaceView.Renderer {
     @Volatile var panY = 0f
 
     @Volatile var lightAngle = 45f
-        set(value) { field = ((value % 360f) + 360f) % 360f }
 
     private var modelCenter = floatArrayOf(0f, 0f, 0f)
     private var modelRadius = 1f
@@ -60,7 +59,6 @@ class STLRenderer : GLSurfaceView.Renderer {
 
     var modelColor = floatArrayOf(0.45f, 0.75f, 0.95f, 1.0f)
 
-    // --- المواد ---
     enum class Material(val id: Int, val nameAr: String, val defaultColor: FloatArray) {
         PLASTIC(0, "بلاستيك", floatArrayOf(0.08f, 0.42f, 0.78f)),
         METAL  (1, "معدن",    floatArrayOf(0.78f, 0.78f, 0.82f)),
@@ -169,6 +167,4 @@ class STLRenderer : GLSurfaceView.Renderer {
             0f, 0f, 0f,
             0f, 1f, 0f)
 
-        Matrix.setIdentityM(modelMatrix, 0)
-        Matrix.translateM(modelMatrix, 0, -modelCenter[0] + panX, -modelCenter[1] + panY, -modelCenter[2])
-        Matrix.rotateM(modelMatrix, 0, rotationX
+        Matrix.setIdentityM
